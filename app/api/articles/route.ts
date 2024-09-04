@@ -71,41 +71,77 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Category does not exist" }, { status: 400 });
         }
 
-        let imageUrl = null;
-        if (image) {
-            const bytes = await image.arrayBuffer();
-            const buffer = Buffer.from(bytes);
+    //     let imageUrl = null;
+    //     if (image) {
+    //         const bytes = await image.arrayBuffer();
+    //         const buffer = Buffer.from(bytes);
 
-            const path = join('public', 'uploads', image.name);
-            try {
-                await writeFile(path, buffer);
-                imageUrl = `/uploads/${image.name}`;
-                console.log('Image saved successfully:', imageUrl);
-            } catch (writeError) {
-                console.error('Error writing file:', writeError);
-                return NextResponse.json({ error: "Failed to save image" }, { status: 500 });
-            }
-        }
+    //         const path = join('public', 'uploads', image.name);
+    //         try {
+    //             await writeFile(path, buffer);
+    //             imageUrl = `/uploads/${image.name}`;
+    //             console.log('Image saved successfully:', imageUrl);
+    //         } catch (writeError) {
+    //             console.error('Error writing file:', writeError);
+    //             return NextResponse.json({ error: "Failed to save image" }, { status: 500 });
+    //         }
+    //     }
 
-        const article = await db.article.create({
-            data: {
-                title,
-                content,
-                imageUrl,
-                author: { connect: { id: session.user.id } },
-                category: { connect: { name: categoryId } }
-            },
-        });
+    //     const article = await db.article.create({
+    //         data: {
+    //             title,
+    //             content,
+    //             imageUrl,
+    //             author: { connect: { id: session.user.id } },
+    //             category: { connect: { name: categoryId } }
+    //         },
+    //     });
 
-        console.log('Article created successfully:', article);
-        return NextResponse.json(article, { status: 201 });
-    } catch (error) {
-        console.error('Error creating article:', error);
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
-            if (error.code === 'P2002') {
-                return NextResponse.json({ error: "A unique constraint would be violated." }, { status: 400 });
-            }
-        }
-        return NextResponse.json({ error: "Failed to create article" }, { status: 500 });
+    //     console.log('Article created successfully:', article);
+    //     return NextResponse.json(article, { status: 201 });
+    // } catch (error) {
+    //     console.error('Error creating article:', error);
+    //     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    //         if (error.code === 'P2002') {
+    //             return NextResponse.json({ error: "A unique constraint would be violated." }, { status: 400 });
+    //         }
+    //     }
+    //     return NextResponse.json({ error: "Failed to create article" }, { status: 500 });
+    // }
+
+        let imageData: Buffer | null = null;
+    let imageMimeType: string | null = null;
+
+    if (image) {
+        const arrayBuffer = await image.arrayBuffer();
+        imageData = Buffer.from(arrayBuffer);
+        imageMimeType = image.type;
+        console.log('Image processed successfully');
     }
+
+    const article = await db.article.create({
+        data: {
+            title,
+            content,
+            imageData: imageData || undefined,
+            imageMimeType: imageMimeType || undefined,
+            author: { connect: { id: session.user.id } },
+            category: { connect: { name: categoryId } }
+        },
+    });
+
+    console.log('Article created successfully:', article);
+
+    // Remove sensitive data before sending response
+    const { imageData: _, ...articleWithoutImageData } = article;
+    return NextResponse.json(articleWithoutImageData, { status: 201 });
+} catch (error) {
+    console.error('Error creating article:', error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+            return NextResponse.json({ error: "A unique constraint would be violated." }, { status: 400 });
+        }
+    }
+    return NextResponse.json({ error: "Failed to create article" }, { status: 500 });
+}
 }
