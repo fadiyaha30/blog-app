@@ -14,6 +14,7 @@ type Article = {
   };
   createdAt: string;
   imageUrl: string | null;
+  imageMimeType?: string | null;
 };
 
 const ArticlesPage = () => {
@@ -43,7 +44,7 @@ const ArticlesPage = () => {
           {articles.map((article) => (
             <Link href={`/articles/${article.id}`} key={article.id}>
               <div className="border border-gray-700 p-4 rounded hover:shadow-lg transition-shadow bg-gray-800">
-                {article.imageUrl && (
+{/*                 {article.imageUrl && (
                   <div className="mb-4">
                     <Image
                       src={article.imageUrl}
@@ -53,7 +54,19 @@ const ArticlesPage = () => {
                       className="rounded-lg object-cover w-full h-40"
                     />
                   </div>
-                )}
+                )} */}
+
+                {(article.imageUrl || article.imageMimeType) && (
+                <div className="mb-4">
+                  <Image
+                    src={article.imageUrl || `/api/articles/image/${article.id}`}
+                    alt={article.title}
+                    width={200}
+                    height={200}
+                    className="rounded-lg object-cover w-full h-40"
+                  />
+                </div>
+              )}
                 <h2 className="text-xl font-semibold mb-2">{article.title}</h2>
                 <p className="text-gray-400 mb-2">{article.category.name}</p>
                 <p className="text-sm text-gray-500">
