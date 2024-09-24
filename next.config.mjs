@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   
-        reactStrictMode: false,
+        reactStrictMode: true,
         images: {
-                domains: ['blog-app-olive-sigma.vercel.app', 'blog-62dti70zk-fay-adins-projects.vercel.app'],
+                domains: ["res.cloudinary.com"],
               },
       
 };
